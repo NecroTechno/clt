@@ -15,11 +15,11 @@ use std::io::{Read, Write};
 use std::collections::HashMap;
 use std::path::Path;
 use std::fs::File;
+use std::time::{Instant, Duration, SystemTime, UNIX_EPOCH};
 use self::tempdir::TempDir;
 
 use libc;
 use libc::ioctl;
-use time;
 
 pub use self::Color::{
     Black,
@@ -353,11 +353,6 @@ pub fn clear() {
 }
 
 
-fn current_ts() -> i64 {
-    time::get_time().sec
-}
-
-
 const BEFORE_BAR: &'static str = "\r\x1b[?25l";
 const AFTER_BAR: &'static str = "\x1b[?25h\n";
 
@@ -375,43 +370,43 @@ const AFTER_BAR: &'static str = "\x1b[?25h\n";
 /// bar.end();
 /// ```
 ///
-pub struct ProgressBar {
+pub struct ProgressBar<'a> {
     pub length: isize,  // the number of items to iterate over
-    pub label: &'static str,  // the label to show next to the progress bar
-    pub fill_char: u8,  // the character to use to show the filled part
-    pub empty_char: u8,  // the character to use to show the non-filled part
+    pub label: &'a str,  // the label to show next to the progress bar
+    pub fill_char: char,  // the character to use to show the filled part
+    pub empty_char: char,  // the character to use to show the non-filled part
     pub width: isize,  // the width of the progress bar in characters
     started: bool,
     finished: bool,
     pos: isize,
-    start: i64,
+    start: Instant,
     is_hidden: bool,
     avgs: Vec<f32>,
     last_line_width: usize,
 }
 
-impl ProgressBar {
+impl<'a> ProgressBar<'a> {
     /// Create a new progressbar.
-    pub fn new(length: isize, label: &'static str) -> ProgressBar {
+    pub fn new(length: isize, label: &'a str) -> ProgressBar {
         ProgressBar {
             length: length,
             label: label,
-            fill_char: 35,
-            empty_char: 32,
+            fill_char: '#',
+            empty_char: ' ',
             width: 30,
             started: false,
             finished: false,
             pos: 0,
-            start: current_ts(),
+            start: Instant::now(),
             is_hidden: !isatty(),
-            avgs: Vec::new(),
+            avgs: Vec::with_capacity(11),
             last_line_width: 0,
         }
     }
 
     pub fn begin(&mut self) {
         self.started = true;
-        self.start = current_ts();
+        self.start = Instant::now();
         self.render_progress();
     }
 
@@ -460,24 +455,27 @@ impl ProgressBar {
     }
 
     fn format_estimate_time(&self) -> String {
-        let tm = time::at_utc(time::Timespec::new(self.estimate_time() as i64, 0));
-        time::strftime("%H:%M:%S", &tm).unwrap()
+        let tm = match SystemTime::now().duration_since(UNIX_EPOCH) {
+            Ok(dur) => dur,
+            Err(err) => err.duration(),
+        };
+        let secs = tm.as_secs();
+        format!("{:02}:{:02}:{:02}", secs / 3600, (secs / 60) % 60, secs % 60)
     }
 
     fn format_progress_line(&self) -> String {
-        let mut bar: Vec<u8> = vec![];
+        let mut bar_str = String::with_capacity(self.width as usize);
         let fill_length = (self.percent() * self.width as f32) as isize;
         let empty_length = self.width - fill_length;
         for _ in 0..fill_length {
-            bar.push(self.fill_char);
+            bar_str.push(self.fill_char);
         }
         for _ in 0..empty_length {
-            bar.push(self.empty_char);
+            bar_str.push(self.empty_char);
         }
-        let bar_str = str::from_utf8(&bar).unwrap();
 
         let mut info: String;
-        if self.finished || (current_ts() - self.start) < 1i64 {
+        if self.finished || self.start.elapsed().as_secs() == 0 {
             info = format!("{}", self.format_percent());
         } else {
             info = format!("{}  {}", self.format_percent(), self.format_estimate_time());
@@ -512,7 +510,7 @@ impl ProgressBar {
         if self.pos >= self.length {
             self.finished = true;
         }
-        let avg: f32 = (current_ts() - self.start) as f32 / self.pos as f32;
+        let avg: f32 = self.start.elapsed().as_secs() as f32 / self.pos as f32;
         self.avgs.insert(0, avg);
         self.avgs.truncate(10);
         self.render_progress();
@@ -521,14 +519,14 @@ impl ProgressBar {
 
 
 /// One editor for you to edit the given text or file.
-pub struct Editor {
-    editor: &'static str,
-    env_map: HashMap<&'static str, &'static str>,
+pub struct Editor<'a, 'k, 'v> {
+    editor: &'a str,
+    env_map: HashMap<&'k str, &'v str>,
 }
 
-impl Editor {
+impl<'a, 'k, 'v> Editor<'a, 'k, 'v> {
     /// Create one new editor.
-    pub fn new(editor: &'static str) -> Editor {
+    pub fn new(editor: &'a str) -> Editor {
         Editor {
             editor: editor,
             env_map: HashMap::new(),
@@ -536,7 +534,7 @@ impl Editor {
     }
 
     /// Inserts or updates an environment variable mapping.
-    pub fn env(&mut self, key: &'static str, value: &'static str) {
+    pub fn env(&mut self, key: &'k str, value: &'v str) {
         self.env_map.insert(key, value);
     }
 

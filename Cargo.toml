@@ -10,7 +10,6 @@ homepage = "https://github.com/shaungillies/cli"
 description = "Rust crate for efficiently creating command line applications."
 
 [dependencies]
-getopts = "*"
-time = "*"
-tempdir = "*"
-libc = "*"
+getopts = "0.2.14"
+tempdir = "0.3.4"
+libc = "0.2.12"
