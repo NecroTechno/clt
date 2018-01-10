@@ -1,4 +1,4 @@
-#Command Line Toolkit (clt)
+# Command Line Toolkit (clt)
 
 [![Build Status](https://travis-ci.org/NecroTechno/clt.svg?branch=master)](https://travis-ci.org/NecroTechno/clt)
 [![Docs](https://docs.rs/clt/badge.svg)](https://docs.rs/clt/)
