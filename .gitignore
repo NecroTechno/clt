@@ -11,6 +11,6 @@
 /target/
 /Cargo.lock
 
-# Added by Shipeng Feng. Modified by Shaun Gillies.
+# Added by Shipeng Feng.
 Cargo.lock
 target

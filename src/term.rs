@@ -1,8 +1,6 @@
 // This module implements terminal related helpers.
 // Copyright (c) 2015 by Shipeng Feng.
-// Originally licensed under the BSD License.
-// Copyright (c) 2016 by Shaun Gillies.
-// Licensed under the GPLv3 License, see LICENSE for more details.
+// Licensed under the BSD License, see LICENSE for more details.
 
 extern crate tempdir;
 
@@ -496,7 +494,7 @@ impl<'a> ProgressBar<'a> {
         if last_line_width > line_width {
             let mut clear_string = "".to_string();
             for _ in 0..last_line_width - line_width {
-                clear_string = clear_string + " ";    
+                clear_string = clear_string + " ";
             }
             io::stdout().write_all(clear_string.as_bytes()).unwrap();
         }
@@ -587,7 +585,7 @@ impl<'a, 'k, 'v> Editor<'a, 'k, 'v> {
         let mut edited_file = File::open(filename).unwrap();
         let mut edited_text = String::new();
         edited_file.read_to_string(&mut edited_text).unwrap();
-        
+
         return edited_text;
     }
 }
