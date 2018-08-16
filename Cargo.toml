@@ -3,7 +3,7 @@
 name = "clt"
 version = "0.0.5"
 authors = ["Shaun Gillies <me@shaungillies.org>"]
-license = "MIT"
+license = "BSD-3-Clause"
 readme = "README.md"
 repository = "https://github.com/shaungillies/clt"
 documentation = "https://docs.rs/clt/"
