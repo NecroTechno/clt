@@ -1,11 +1,11 @@
 [package]
 
 name = "clt"
-version = "0.0.5"
-authors = ["Shaun Gillies <me@shaungillies.org>"]
+version = "0.0.6"
+authors = ["NecroTechno <necrotechno@riseup.net>"]
 license = "BSD-3-Clause"
 readme = "README.md"
-repository = "https://github.com/shaungillies/clt"
+repository = "https://github.com/NecroTechno/clt"
 documentation = "https://docs.rs/clt/"
 description = "Rust crate for efficiently creating command line applications."
 
